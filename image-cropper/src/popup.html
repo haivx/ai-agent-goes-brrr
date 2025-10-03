@@ -7,7 +7,23 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main id="app" aria-live="polite"></main>
+    <main id="app" aria-live="polite">
+      <form id="image-form" class="controls" aria-label="Image controls">
+        <label for="image-input">Choose an image</label>
+        <input id="image-input" type="file" accept="image/*" />
+      </form>
+      <canvas
+        id="image-canvas"
+        width="360"
+        height="240"
+        role="img"
+        aria-label="Selected image preview"
+      ></canvas>
+      <div class="actions">
+        <button type="button" id="reset-button">Reset</button>
+        <button type="button" id="download-button" disabled>Download</button>
+      </div>
+    </main>
     <script type="module" src="popup.js"></script>
   </body>
 </html>
