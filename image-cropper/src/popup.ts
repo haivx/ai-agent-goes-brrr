@@ -1,3 +1,5 @@
+import { createCropper, type CropRect, type ImageMetrics } from './lib/cropper';
+
 const appRoot = document.querySelector<HTMLDivElement>('#app');
 
 if (!appRoot) {
@@ -13,6 +15,32 @@ if (!fileInput || !canvas || !resetButton || !downloadButton) {
   throw new Error('Popup markup is missing required elements');
 }
 
+const canvasParent = canvas.parentElement;
+
+if (!canvasParent) {
+  throw new Error('Canvas element is missing a parent container');
+}
+
+const canvasNextSibling = canvas.nextElementSibling;
+const canvasWrapper = document.createElement('div');
+canvasWrapper.classList.add('canvas-wrapper');
+
+const overlayCanvas = document.createElement('canvas');
+overlayCanvas.id = 'crop-overlay';
+overlayCanvas.width = canvas.width;
+overlayCanvas.height = canvas.height;
+overlayCanvas.setAttribute('aria-hidden', 'true');
+overlayCanvas.setAttribute('role', 'presentation');
+
+canvasWrapper.appendChild(canvas);
+canvasWrapper.appendChild(overlayCanvas);
+
+if (canvasNextSibling) {
+  canvasParent.insertBefore(canvasWrapper, canvasNextSibling);
+} else {
+  canvasParent.appendChild(canvasWrapper);
+}
+
 const context = canvas.getContext('2d');
 
 if (!context) {
@@ -21,6 +49,33 @@ if (!context) {
 
 let hasImageLoaded = false;
 let currentScaleFactor = 1;
+let currentImageMetrics: ImageMetrics | null = null;
+let currentCrop: CropRect | null = null;
+
+const MIN_CROP_SIZE = 32;
+
+const cropper = createCropper(overlayCanvas, {
+  minSize: MIN_CROP_SIZE,
+  onChange: (nextCrop) => {
+    currentCrop = nextCrop;
+  },
+});
+
+const createInitialCrop = (width: number, height: number): CropRect => {
+  const desiredWidth = Math.max(MIN_CROP_SIZE, width * 0.8);
+  const desiredHeight = Math.max(MIN_CROP_SIZE, height * 0.8);
+  const initialWidth = Math.min(width, desiredWidth);
+  const initialHeight = Math.min(height, desiredHeight);
+  const initialX = (width - initialWidth) / 2;
+  const initialY = (height - initialHeight) / 2;
+
+  return {
+    x: initialX,
+    y: initialY,
+    width: initialWidth,
+    height: initialHeight,
+  };
+};
 
 const setDownloadState = (enabled: boolean): void => {
   downloadButton.disabled = !enabled;
@@ -33,8 +88,11 @@ const clearCanvas = (): void => {
 const resetState = (): void => {
   hasImageLoaded = false;
   currentScaleFactor = 1;
+  currentImageMetrics = null;
+  currentCrop = null;
   delete canvas.dataset.scaleFactor;
   clearCanvas();
+  cropper.clear();
   setDownloadState(false);
 };
 
@@ -81,6 +139,20 @@ const drawImageToCanvas = async (file: File): Promise<void> => {
   clearCanvas();
   context.drawImage(image, offsetX, offsetY, drawnWidth, drawnHeight);
 
+  const metrics: ImageMetrics = {
+    naturalWidth: imageWidth,
+    naturalHeight: imageHeight,
+    drawnWidth,
+    drawnHeight,
+    offsetX,
+    offsetY,
+    scale,
+  };
+
+  currentImageMetrics = metrics;
+  cropper.setImageMetrics(metrics);
+  cropper.setCrop(createInitialCrop(imageWidth, imageHeight));
+
   currentScaleFactor = scale;
   canvas.dataset.scaleFactor = String(currentScaleFactor);
   hasImageLoaded = true;
@@ -122,7 +194,7 @@ const handleReset = (): void => {
 };
 
 const handleDownload = (): void => {
-  if (!hasImageLoaded) {
+  if (!hasImageLoaded || !currentCrop || !currentImageMetrics) {
     return;
   }
 
