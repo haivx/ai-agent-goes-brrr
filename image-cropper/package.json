@@ -1,12 +1,13 @@
 {
   "name": "chrome-image-cropper",
   "version": "0.1.0",
-  "description": "Chrome extension for cropping images before download.",
+  "description": "Chrome extension scaffold for image cropping.",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsup src/popup.ts --format=esm --sourcemap --clean --out-dir dist --watch",
-    "build": "tsup src/popup.ts --format=esm --sourcemap --minify --clean --out-dir dist",
+    "clean": "rimraf dist",
+    "dev": "pnpm clean && tsup --watch",
+    "build": "pnpm clean && tsup",
     "zip": "pnpm build && pnpm rimraf chrome-image-cropper.zip && cd dist && zip -r ../chrome-image-cropper.zip .",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
@@ -15,14 +16,15 @@
   "devDependencies": {
     "@eslint/js": "^8.57.1",
     "@types/chrome": "^0.0.247",
+    "@types/node": "^20.16.11",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.5",
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.5",
     "rimraf": "^5.0.5",
+    "tsup": "^8.0.2",
+    "typescript": "5.5.4",
     "typescript-eslint": "^7.8.0"
   }
 }
