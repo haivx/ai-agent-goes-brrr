@@ -201,15 +201,53 @@ const handleReset = (): void => {
   resetState();
 };
 
-const createDownloadLink = (blob: Blob, extension: string): void => {
+const downloadBlob = (blob: Blob, extension: string): void => {
   const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = objectUrl;
-  link.download = `crop.${extension}`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(objectUrl);
+  const filename = `crop.${extension}`;
+
+  const fallbackDownload = (): void => {
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
+  };
+
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.downloads &&
+      typeof chrome.downloads.download === 'function'
+    ) {
+      chrome.downloads.download(
+        {
+          url: objectUrl,
+          filename,
+          saveAs: false,
+        },
+        () => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.error('Failed to download via chrome.downloads', chrome.runtime.lastError);
+            fallbackDownload();
+            return;
+          }
+
+          window.setTimeout(() => {
+            URL.revokeObjectURL(objectUrl);
+          }, 1000);
+        },
+      );
+      return;
+    }
+  } catch (error) {
+    console.error('Unexpected error while downloading blob', error);
+    fallbackDownload();
+    return;
+  }
+
+  fallbackDownload();
 };
 
 const exportCrop = async (format: ExportFormat): Promise<void> => {
@@ -265,7 +303,7 @@ const exportCrop = async (format: ExportFormat): Promise<void> => {
   }
 
   const extension = format === 'image/png' ? 'png' : 'jpg';
-  createDownloadLink(blob, extension);
+  downloadBlob(blob, extension);
 };
 
 const handleDownload = async (): Promise<void> => {
