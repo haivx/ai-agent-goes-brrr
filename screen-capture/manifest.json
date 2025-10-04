@@ -3,7 +3,7 @@
   "name": "Chrome Image Cropper (MVP)",
   "version": "0.0.1",
   "description": "Minimal MV3 setup for the Chrome Image Cropper extension.",
-  "permissions": ["activeTab", "downloads", "scripting"],
+  "permissions": ["activeTab", "downloads", "scripting", "tabCapture"],
   "action": {
     "default_title": "Toggle crop overlay",
     "default_icon": {

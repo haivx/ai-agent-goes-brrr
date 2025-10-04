@@ -96,7 +96,7 @@ chrome.runtime.onMessage.addListener(
           await chrome.downloads.download({
             url: message.dataUrl,
             filename,
-            saveAs: true,
+            saveAs: false,
           });
 
           sendResponse({ ok: true });
