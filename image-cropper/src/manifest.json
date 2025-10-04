@@ -4,8 +4,11 @@
   "description": "Crop images before downloading them locally.",
   "version": "0.1.0",
   "action": {
-    "default_popup": "popup.html",
     "default_title": "Image Cropper"
   },
-  "permissions": []
+  "permissions": ["activeTab", "downloads", "scripting"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
 }
