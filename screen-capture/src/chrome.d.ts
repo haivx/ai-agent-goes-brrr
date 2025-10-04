@@ -10,7 +10,7 @@ declare global {
             message: unknown,
             sender: unknown,
             sendResponse: (response: unknown) => void,
-          ) => void,
+          ) => void | boolean | Promise<unknown>,
         ): void;
       };
     };
