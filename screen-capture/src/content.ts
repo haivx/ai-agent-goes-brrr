@@ -104,6 +104,15 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
+function setFullScreenSelection() {
+  rect.x = 0;
+  rect.y = 0;
+  rect.w = window.innerWidth;
+  rect.h = window.innerHeight;
+  clampRectToViewport(rect);
+  hasSelection = true;
+}
+
 function mount() {
   if (overlay) {
     return;
@@ -141,8 +150,7 @@ function mount() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  hasSelection = false;
-  clampRectToViewport(rect);
+  setFullScreenSelection();
   render();
   overlay.focus({ preventScroll: true });
 
