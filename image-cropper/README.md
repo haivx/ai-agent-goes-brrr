@@ -49,7 +49,7 @@ pnpm build
 pnpm zip
 ```
 
-The ZIP archive (`chrome-image-cropper.zip`) can be uploaded to the Chrome Web Store or shared directly.
+The ZIP archive (`image-cropper.zip`) can be uploaded to the Chrome Web Store or shared directly.
 
 ## Usage
 1. Click the extension action to open the popup.

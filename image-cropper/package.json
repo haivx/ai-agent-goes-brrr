@@ -1,5 +1,5 @@
 {
-  "name": "chrome-image-cropper",
+  "name": "image-cropper",
   "version": "0.1.0",
   "description": "Chrome extension scaffold for image cropping.",
   "private": true,
@@ -8,7 +8,7 @@
     "clean": "rimraf dist",
     "dev": "pnpm clean && tsup --watch",
     "build": "pnpm clean && tsup",
-    "zip": "pnpm build && pnpm rimraf chrome-image-cropper.zip && cd dist && zip -r ../chrome-image-cropper.zip .",
+    "zip": "pnpm build && pnpm rimraf image-cropper.zip && cd dist && zip -r ../image-cropper.zip .",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"
