@@ -4,6 +4,15 @@
   "version": "0.0.1",
   "description": "Minimal MV3 setup for the Chrome Image Cropper extension.",
   "permissions": ["activeTab", "downloads", "scripting"],
+  "action": {
+    "default_title": "Toggle crop overlay",
+    "default_icon": {
+      "16": "public/icon-128.png",
+      "32": "public/icon-128.png",
+      "48": "public/icon-128.png",
+      "128": "public/icon-128.png"
+    }
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -17,5 +26,13 @@
   ],
   "icons": {
     "128": "public/icon-128.png"
+  },
+  "commands": {
+    "toggle-crop-overlay": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Toggle the crop overlay"
+    }
   }
 }

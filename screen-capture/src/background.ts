@@ -19,6 +19,45 @@ function isDownloadMessage(message: Record<string, unknown>): message is Downloa
   return message.type === "CROP_EXT::DOWNLOAD";
 }
 
+async function dispatchToggleEvent(tabId?: number): Promise<void> {
+  try {
+    const targetTabId =
+      typeof tabId === "number"
+        ? tabId
+        : (await chrome.tabs.query({ active: true, lastFocusedWindow: true }))[0]?.id;
+
+    if (typeof targetTabId !== "number") {
+      console.warn("[CROP_EXT] Unable to determine active tab for toggle action");
+      return;
+    }
+
+    await chrome.scripting.executeScript({
+      target: { tabId: targetTabId },
+      func: () => {
+        window.dispatchEvent(new CustomEvent("CROP_EXT::TOGGLE"));
+      },
+    });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("[CROP_EXT] toggle error:", errMsg);
+  }
+}
+
+chrome.action.onClicked.addListener(async (tab) => {
+  if (typeof tab.id !== "number") {
+    await dispatchToggleEvent();
+    return;
+  }
+
+  await dispatchToggleEvent(tab.id);
+});
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === "toggle-crop-overlay") {
+    await dispatchToggleEvent();
+  }
+});
+
 chrome.runtime.onMessage.addListener(
   (message: CropMessage | Record<string, unknown> | unknown, _sender: unknown, sendResponse: (response: unknown) => void) => {
     if (!isRecord(message)) {
