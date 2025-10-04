@@ -2,7 +2,7 @@
 
 A Manifest V3 Chrome extension that lets you load an image, adjust an on-canvas crop box with eight drag handles, and download the cropped result as a PNG or JPEG. The project is written in TypeScript with zero external runtime dependencies and bundles via `tsup` for an easy development workflow.
 
-> **Ghi chú:** Toàn bộ mã nguồn được tạo 100% bằng AI Codex; tác giả dự án chỉ thực hiện việc mô tả yêu cầu.
+> **Note:** The entire codebase was generated 100% by AI Codex; the project author only supplied the requirements.
 
 ## Features
 - 📂 Select any local image through the popup file picker.
