@@ -433,11 +433,16 @@ async function doCapture() {
 
     const img = await dataUrlToImage(resp.dataUrl);
 
-    const dpr = window.devicePixelRatio || 1;
-    const sx = Math.max(0, Math.floor(rect.x * dpr));
-    const sy = Math.max(0, Math.floor(rect.y * dpr));
-    const x2 = Math.min(img.width, Math.ceil((rect.x + rect.w) * dpr));
-    const y2 = Math.min(img.height, Math.ceil((rect.y + rect.h) * dpr));
+    const viewportWidth = window.innerWidth || img.width;
+    const viewportHeight = window.innerHeight || img.height;
+
+    const scaleX = viewportWidth > 0 ? img.width / viewportWidth : 1;
+    const scaleY = viewportHeight > 0 ? img.height / viewportHeight : 1;
+
+    const sx = Math.max(0, Math.floor(rect.x * scaleX));
+    const sy = Math.max(0, Math.floor(rect.y * scaleY));
+    const x2 = Math.min(img.width, Math.ceil((rect.x + rect.w) * scaleX));
+    const y2 = Math.min(img.height, Math.ceil((rect.y + rect.h) * scaleY));
     const sw = Math.max(1, x2 - sx);
     const sh = Math.max(1, y2 - sy);
 
