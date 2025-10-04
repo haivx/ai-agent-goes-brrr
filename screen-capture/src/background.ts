@@ -58,29 +58,30 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-chrome.runtime.onMessage.addListener((message: CropMessage | Record<string, unknown> | unknown) => {
+chrome.runtime.onMessage.addListener((message: CropMessage | Record<string, unknown> | unknown, _sender, sendResponse) => {
   if (!isRecord(message)) {
     return undefined;
   }
 
   if (isCaptureMessage(message)) {
-    return (async () => {
+    (async () => {
       try {
         const dataUrl = await chrome.tabs.captureVisibleTab(undefined, {
           format: "png",
         });
 
-        return { ok: true, dataUrl };
+        sendResponse({ ok: true, dataUrl });
       } catch (error) {
         const errMsg = error instanceof Error ? error.message : String(error);
         console.error("[CROP_EXT] capture error:", errMsg);
-        return { ok: false, error: errMsg };
+        sendResponse({ ok: false, error: errMsg });
       }
     })();
+    return true;
   }
 
   if (isDownloadMessage(message)) {
-    return (async () => {
+    (async () => {
       try {
         if (typeof message.dataUrl !== "string") {
           throw new Error("Missing dataUrl");
@@ -97,13 +98,14 @@ chrome.runtime.onMessage.addListener((message: CropMessage | Record<string, unkn
           saveAs: false,
         });
 
-        return { ok: true };
+        sendResponse({ ok: true });
       } catch (error) {
         const errMsg = error instanceof Error ? error.message : String(error);
         console.error("[CROP_EXT] download error:", errMsg);
-        return { ok: false, error: errMsg };
+        sendResponse({ ok: false, error: errMsg });
       }
     })();
+    return true;
   }
 
   return undefined;
