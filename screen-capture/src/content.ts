@@ -27,6 +27,51 @@ let startRect: Rect | null = null;
 
 const rect: Rect = { x: 120, y: 120, w: 480, h: 300 };
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function clampRectToViewport(target: Rect) {
+  const maxWidth = Math.max(MIN_SIZE, window.innerWidth);
+  const maxHeight = Math.max(MIN_SIZE, window.innerHeight);
+
+  target.w = clamp(target.w, MIN_SIZE, maxWidth);
+  target.h = clamp(target.h, MIN_SIZE, maxHeight);
+
+  if (target.w > window.innerWidth) {
+    target.w = window.innerWidth;
+  }
+  if (target.h > window.innerHeight) {
+    target.h = window.innerHeight;
+  }
+
+  if (target.x + target.w > window.innerWidth) {
+    target.x = Math.max(0, window.innerWidth - target.w);
+  }
+  if (target.y + target.h > window.innerHeight) {
+    target.y = Math.max(0, window.innerHeight - target.h);
+  }
+
+  target.x = clamp(target.x, 0, Math.max(0, window.innerWidth - target.w));
+  target.y = clamp(target.y, 0, Math.max(0, window.innerHeight - target.h));
+}
+
+function nudge(dx: number, dy: number) {
+  rect.x += dx;
+  rect.y += dy;
+  clampRectToViewport(rect);
+  render();
+}
+
+function preventScroll(event: Event) {
+  event.preventDefault();
+}
+
+function onViewportResize() {
+  clampRectToViewport(rect);
+  render();
+}
+
 function ensureStyles() {
   if (document.getElementById("crop-ext-style")) {
     return;
@@ -62,6 +107,8 @@ function mount() {
   overlay = document.createElement("div");
   overlay.className = "crop-ext-overlay";
   overlay.tabIndex = -1;
+  overlay.addEventListener("wheel", preventScroll, { passive: false });
+  overlay.addEventListener("touchmove", preventScroll, { passive: false });
   overlay.addEventListener("mousedown", onOverlayDown);
 
   box = document.createElement("div");
@@ -86,11 +133,12 @@ function mount() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  clampRectToViewport();
+  clampRectToViewport(rect);
   render();
   overlay.focus({ preventScroll: true });
 
   document.addEventListener("keydown", onKeydown, true);
+  window.addEventListener("resize", onViewportResize);
 }
 
 function unmount() {
@@ -101,6 +149,10 @@ function unmount() {
   document.removeEventListener("keydown", onKeydown, true);
   stopInteractions();
 
+  window.removeEventListener("resize", onViewportResize);
+
+  overlay.removeEventListener("wheel", preventScroll);
+  overlay.removeEventListener("touchmove", preventScroll);
   overlay.removeEventListener("mousedown", onOverlayDown);
   overlay.remove();
   overlay = null;
@@ -126,7 +178,7 @@ function beginDrag(event: MouseEvent) {
   activeHandle = null;
   pointerStartX = event.clientX;
   pointerStartY = event.clientY;
-  startRect = { ...rect };
+  startRect = null;
 
   document.addEventListener("mousemove", onDragMove);
   document.addEventListener("mouseup", onPointerUp);
@@ -156,29 +208,25 @@ function onOverlayDown(event: MouseEvent) {
   rect.y = startY;
   rect.w = MIN_SIZE;
   rect.h = MIN_SIZE;
+  clampRectToViewport(rect);
   render();
 
   beginResize("create", event, { x: startX, y: startY, w: 0, h: 0 });
 }
 
 function onDragMove(event: MouseEvent) {
-  if (!startRect) {
-    return;
-  }
-
   event.preventDefault();
 
   const dx = event.clientX - pointerStartX;
   const dy = event.clientY - pointerStartY;
 
-  const width = startRect.w;
-  const height = startRect.h;
+  pointerStartX = event.clientX;
+  pointerStartY = event.clientY;
 
-  rect.x = clamp(startRect.x + dx, 0, Math.max(0, window.innerWidth - width));
-  rect.y = clamp(startRect.y + dy, 0, Math.max(0, window.innerHeight - height));
-  rect.w = width;
-  rect.h = height;
+  rect.x += dx;
+  rect.y += dy;
 
+  clampRectToViewport(rect);
   render();
 }
 
@@ -279,10 +327,7 @@ function onResizeMove(event: MouseEvent) {
     }
   }
 
-  nextRect.x = clamp(nextRect.x, 0, Math.max(0, window.innerWidth - MIN_SIZE));
-  nextRect.y = clamp(nextRect.y, 0, Math.max(0, window.innerHeight - MIN_SIZE));
-  nextRect.w = Math.max(MIN_SIZE, Math.min(nextRect.w, window.innerWidth - nextRect.x));
-  nextRect.h = Math.max(MIN_SIZE, Math.min(nextRect.h, window.innerHeight - nextRect.y));
+  clampRectToViewport(nextRect);
 
   rect.x = nextRect.x;
   rect.y = nextRect.y;
@@ -320,6 +365,30 @@ function onKeydown(event: KeyboardEvent) {
     event.preventDefault();
     event.stopPropagation();
     doCapture();
+  } else {
+    const step = event.shiftKey ? 10 : 1;
+    switch (event.key) {
+      case "ArrowLeft":
+        event.preventDefault();
+        event.stopPropagation();
+        nudge(-step, 0);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        event.stopPropagation();
+        nudge(step, 0);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        event.stopPropagation();
+        nudge(0, -step);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        event.stopPropagation();
+        nudge(0, step);
+        break;
+    }
   }
 }
 
@@ -382,20 +451,6 @@ function dataUrlToImage(dataUrl: string) {
     img.onerror = () => reject(new Error("Failed to load captured image"));
     img.src = dataUrl;
   });
-}
-
-function clamp(value: number, min: number, max: number) {
-  if (max < min) {
-    return min;
-  }
-  return Math.min(Math.max(value, min), max);
-}
-
-function clampRectToViewport() {
-  rect.w = clamp(rect.w, MIN_SIZE, Math.max(MIN_SIZE, window.innerWidth));
-  rect.h = clamp(rect.h, MIN_SIZE, Math.max(MIN_SIZE, window.innerHeight));
-  rect.x = clamp(rect.x, 0, Math.max(0, window.innerWidth - rect.w));
-  rect.y = clamp(rect.y, 0, Math.max(0, window.innerHeight - rect.h));
 }
 
 function render() {
