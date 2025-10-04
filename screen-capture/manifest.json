@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Image Cropper (MVP)",
+  "version": "0.0.1",
+  "description": "Minimal MV3 setup for the Chrome Image Cropper extension.",
+  "permissions": ["activeTab", "downloads", "scripting"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "128": "public/icon-128.png"
+  }
+}

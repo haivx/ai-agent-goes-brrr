@@ -1,0 +1,5 @@
+node_modules/
+dist/
+chrome-image-cropper.zip
+public/icon-128.png
+.pnpm-debug.log
