@@ -323,10 +323,65 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-function doCapture() {
-  // Placeholder implementation – actual capture logic will be added later.
-  // eslint-disable-next-line no-console
-  console.log("[CROP_EXT] capture requested", { ...rect });
+async function doCapture() {
+  try {
+    const resp = (await chrome.runtime.sendMessage({
+      type: "CROP_EXT::CAPTURE",
+    })) as { ok: boolean; dataUrl?: string; error?: string };
+
+    if (!resp?.ok || !resp.dataUrl) {
+      console.error("[CROP_EXT] capture failed:", resp?.error);
+      return;
+    }
+
+    const img = await dataUrlToImage(resp.dataUrl);
+
+    const dpr = window.devicePixelRatio || 1;
+    const sx = Math.max(0, Math.floor(rect.x * dpr));
+    const sy = Math.max(0, Math.floor(rect.y * dpr));
+    const x2 = Math.min(img.width, Math.ceil((rect.x + rect.w) * dpr));
+    const y2 = Math.min(img.height, Math.ceil((rect.y + rect.h) * dpr));
+    const sw = Math.max(1, x2 - sx);
+    const sh = Math.max(1, y2 - sy);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = sw;
+    canvas.height = sh;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("[CROP_EXT] unable to acquire 2d context");
+      return;
+    }
+
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    const outDataUrl = canvas.toDataURL("image/png");
+    const fileName = `capture_${Date.now()}.png`;
+
+    const dl = (await chrome.runtime.sendMessage({
+      type: "CROP_EXT::DOWNLOAD",
+      dataUrl: outDataUrl,
+      fileName,
+    })) as { ok: boolean; error?: string };
+
+    if (!dl?.ok) {
+      console.error("[CROP_EXT] download failed:", dl?.error);
+    }
+  } catch (err) {
+    console.error("[CROP_EXT] doCapture error:", err);
+  } finally {
+    unmount();
+  }
+}
+
+function dataUrlToImage(dataUrl: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load captured image"));
+    img.src = dataUrl;
+  });
 }
 
 function clamp(value: number, min: number, max: number) {
