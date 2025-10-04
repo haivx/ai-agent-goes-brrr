@@ -14,12 +14,10 @@ const iconPath = resolve(distDir, 'public', 'icon-128.png');
 const iconBase64 =
   'iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABY0lEQVR4nO3UQRGAQBADwYNCH4LwhQPk4AFk7GO6FeQxlW1d37fqzukBc/bpAcwSQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHHHWvf0hnnvM71gjAeIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxP0a/wYtkK0lNgAAAABJRU5ErkJggg==';
 
-const entryPoints = [
-  { in: resolve(rootDir, 'src/background.ts'), out: 'background' },
-  { in: resolve(rootDir, 'src/content.ts'), out: 'content' }
-];
+const backgroundEntry = resolve(rootDir, 'src/background.ts');
+const contentEntry = resolve(rootDir, 'src/content.ts');
 
-for (const { in: input } of entryPoints) {
+for (const input of [backgroundEntry, contentEntry]) {
   if (!existsSync(input)) {
     throw new Error(`Missing entry point: ${input}`);
   }
@@ -28,11 +26,24 @@ for (const { in: input } of entryPoints) {
 await emptyDir(distDir);
 
 await build({
-  entryPoints,
+  entryPoints: [backgroundEntry],
   bundle: true,
   format: 'esm',
   platform: 'browser',
-  outdir: distDir,
+  outfile: resolve(distDir, 'background.js'),
+  target: 'es2020',
+  logLevel: 'info',
+  sourcemap: false,
+  treeShaking: true,
+});
+
+await build({
+  entryPoints: [contentEntry],
+  bundle: true,
+  format: 'iife',
+  platform: 'browser',
+  globalName: 'cropExtContent',
+  outfile: resolve(distDir, 'content.js'),
   target: 'es2020',
   logLevel: 'info',
   sourcemap: false,

@@ -472,5 +472,3 @@ window.addEventListener("CROP_EXT::TOGGLE", () => {
     mount();
   }
 });
-
-export {};
