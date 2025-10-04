@@ -21,6 +21,7 @@ const MIN_SIZE = 12;
 let overlay: HTMLDivElement | null = null;
 let box: HTMLDivElement | null = null;
 let info: HTMLDivElement | null = null;
+let hasSelection = false;
 
 let activeHandle: ActiveHandle | null = null;
 let pointerStartX = 0;
@@ -59,6 +60,10 @@ function clampRectToViewport(target: Rect) {
 }
 
 function nudge(dx: number, dy: number) {
+  if (!hasSelection) {
+    return;
+  }
+
   rect.x += dx;
   rect.y += dy;
   clampRectToViewport(rect);
@@ -115,6 +120,7 @@ function mount() {
 
   box = document.createElement("div");
   box.className = "crop-ext-box";
+  box.style.display = "none";
 
   info = document.createElement("div");
   info.className = "crop-ext-info";
@@ -135,6 +141,7 @@ function mount() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
+  hasSelection = false;
   clampRectToViewport(rect);
   render();
   overlay.focus({ preventScroll: true });
@@ -160,6 +167,7 @@ function unmount() {
   overlay = null;
   box = null;
   info = null;
+  hasSelection = false;
 }
 
 function beginResize(handle: ActiveHandle, event: MouseEvent, initialRect?: Rect) {
@@ -194,6 +202,7 @@ function onOverlayDown(event: MouseEvent) {
   event.preventDefault();
 
   const within =
+    hasSelection &&
     event.clientX >= rect.x &&
     event.clientX <= rect.x + rect.w &&
     event.clientY >= rect.y &&
@@ -208,10 +217,8 @@ function onOverlayDown(event: MouseEvent) {
   const startY = clamp(event.clientY, 0, window.innerHeight);
   rect.x = startX;
   rect.y = startY;
-  rect.w = MIN_SIZE;
-  rect.h = MIN_SIZE;
-  clampRectToViewport(rect);
-  render();
+  rect.w = 0;
+  rect.h = 0;
 
   beginResize("create", event, { x: startX, y: startY, w: 0, h: 0 });
 }
@@ -331,6 +338,10 @@ function onResizeMove(event: MouseEvent) {
 
   clampRectToViewport(nextRect);
 
+  if (activeHandle === "create" && !hasSelection) {
+    hasSelection = true;
+  }
+
   rect.x = nextRect.x;
   rect.y = nextRect.y;
   rect.w = nextRect.w;
@@ -364,6 +375,9 @@ function onKeydown(event: KeyboardEvent) {
     event.stopPropagation();
     unmount();
   } else if (event.key === "Enter") {
+    if (!hasSelection) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     doCapture();
@@ -395,6 +409,10 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 async function doCapture() {
+  if (!hasSelection) {
+    return;
+  }
+
   try {
     const resp = (await chrome.runtime.sendMessage({
       type: "CROP_EXT::CAPTURE",
@@ -460,6 +478,13 @@ function render() {
     return;
   }
 
+  if (!hasSelection) {
+    box.style.display = "none";
+    info.textContent = "";
+    return;
+  }
+
+  box.style.display = "block";
   box.style.left = `${rect.x}px`;
   box.style.top = `${rect.y}px`;
   box.style.width = `${rect.w}px`;
