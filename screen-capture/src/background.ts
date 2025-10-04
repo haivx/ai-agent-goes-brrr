@@ -58,57 +58,53 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-chrome.runtime.onMessage.addListener(
-  (message: CropMessage | Record<string, unknown> | unknown, _sender: unknown, sendResponse: (response: unknown) => void) => {
-    if (!isRecord(message)) {
-      return;
-    }
-
-    if (isCaptureMessage(message)) {
-      (async () => {
-        try {
-          const dataUrl = await chrome.tabs.captureVisibleTab(undefined, {
-            format: "png",
-          });
-
-          sendResponse({ ok: true, dataUrl });
-        } catch (error) {
-          const errMsg = error instanceof Error ? error.message : String(error);
-          console.error("[CROP_EXT] capture error:", errMsg);
-          sendResponse({ ok: false, error: errMsg });
-        }
-      })();
-      return true;
-    }
-
-    if (isDownloadMessage(message)) {
-      (async () => {
-        try {
-          if (typeof message.dataUrl !== "string") {
-            throw new Error("Missing dataUrl");
-          }
-
-          const filename =
-            typeof message.fileName === "string" && message.fileName.length > 0
-              ? message.fileName
-              : `capture_${Date.now()}.png`;
-
-          await chrome.downloads.download({
-            url: message.dataUrl,
-            filename,
-            saveAs: true,
-          });
-
-          sendResponse({ ok: true });
-        } catch (error) {
-          const errMsg = error instanceof Error ? error.message : String(error);
-          console.error("[CROP_EXT] download error:", errMsg);
-          sendResponse({ ok: false, error: errMsg });
-        }
-      })();
-      return true;
-    }
-
+chrome.runtime.onMessage.addListener((message: CropMessage | Record<string, unknown> | unknown) => {
+  if (!isRecord(message)) {
     return undefined;
-  },
-);
+  }
+
+  if (isCaptureMessage(message)) {
+    return (async () => {
+      try {
+        const dataUrl = await chrome.tabs.captureVisibleTab(undefined, {
+          format: "png",
+        });
+
+        return { ok: true, dataUrl };
+      } catch (error) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error("[CROP_EXT] capture error:", errMsg);
+        return { ok: false, error: errMsg };
+      }
+    })();
+  }
+
+  if (isDownloadMessage(message)) {
+    return (async () => {
+      try {
+        if (typeof message.dataUrl !== "string") {
+          throw new Error("Missing dataUrl");
+        }
+
+        const filename =
+          typeof message.fileName === "string" && message.fileName.length > 0
+            ? message.fileName
+            : `capture_${Date.now()}.png`;
+
+        await chrome.downloads.download({
+          url: message.dataUrl,
+          filename,
+          saveAs: false,
+        });
+
+        return { ok: true };
+      } catch (error) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error("[CROP_EXT] download error:", errMsg);
+        return { ok: false, error: errMsg };
+      }
+    })();
+  }
+
+  return undefined;
+});
