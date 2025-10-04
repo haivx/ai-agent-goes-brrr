@@ -1,6 +1,8 @@
 # AI Agent Goes Brrr
 
-This repository hosts two Chrome extensions that were built end-to-end by AI agents. Each project targets a different slice of on-device image tooling and shares a lightweight tooling stack based on TypeScript and pnpm.
+This repository collects a growing set of small "vibe coded" projects that explore creative automation ideas. Some of them happen to be Chrome extensions, others are experiments, but they all share an emphasis on lightweight tooling and AI-assisted iteration.
+
+The first two projects live in this repo today, both focused on browser-based image workflows built with TypeScript and pnpm.
 
 ## Repository Structure
 
@@ -68,6 +70,10 @@ pnpm zip           # packages screen-capture.zip
 ```
 
 Chrome loads the compiled assets from `screen-capture/dist`.
+
+---
+
+As new vibe coding experiments appear in the repository, they will be added to the table above with links to their dedicated documentation.
 
 ## Contributing
 
