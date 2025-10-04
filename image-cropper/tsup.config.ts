@@ -18,7 +18,7 @@ const copyStaticAssets = async (): Promise<void> => {
 };
 
 export default defineConfig(({ watch }) => ({
-  entry: ['src/popup.ts'],
+  entry: ['src/popup.ts', 'src/background.ts'],
   format: ['esm'],
   sourcemap: true,
   clean: true,
