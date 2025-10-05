@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import type { Lead } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
 
+import type { LeadDto } from "../route";
+import { leadSelect, mapLeadToDto } from "../route";
+
 export type LeadDetailResponse = {
-  data: Lead | null;
+  data: LeadDto | null;
   message?: string;
 };
 
@@ -15,7 +17,8 @@ export async function GET(
   const lead = await prisma.lead.findUnique({
     where: {
       id: params.id
-    }
+    },
+    select: leadSelect
   });
 
   if (!lead) {
@@ -28,5 +31,5 @@ export async function GET(
     );
   }
 
-  return NextResponse.json({ data: lead });
+  return NextResponse.json({ data: mapLeadToDto(lead) });
 }
