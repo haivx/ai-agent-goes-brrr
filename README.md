@@ -2,7 +2,7 @@
 
 This repository collects a growing set of small "vibe coded" projects that explore creative automation ideas. Some of them happen to be Chrome extensions, others are experiments, but they all share an emphasis on lightweight tooling and AI-assisted iteration.
 
-The first two projects live in this repo today, both focused on browser-based image workflows built with TypeScript and pnpm.
+Each project is independent—install dependencies and run commands within the corresponding folder. The current line-up spans browser extensions and a small full-stack demo app.
 
 ## Repository Structure
 
@@ -10,23 +10,27 @@ The first two projects live in this repo today, both focused on browser-based im
 | --- | --- |
 | [`image-cropper/`](image-cropper) | Popup-based MV3 extension for cropping local images before downloading them. |
 | [`screen-capture/`](screen-capture) | MV3 extension that overlays a crop box on the active tab so you can capture and download just the selected viewport area. |
+| [`sales-lead-snapshot/`](sales-lead-snapshot) | Next.js app that turns uploaded screenshots into structured leads and outreach emails via a two-agent workflow. |
 
-Both projects run independently—install dependencies and build artifacts within the respective folders.
+All projects run independently—install dependencies and build artifacts within the respective folders.
 
 ## Prerequisites
 
 - Node.js 20.x
 - [pnpm](https://pnpm.io/)
 
-Install dependencies per project:
+### Quick start
 
 ```bash
+git clone https://github.com/<you>/ai-agent-goes-brrr.git
+cd ai-agent-goes-brrr
+
+# choose a project folder from the table above
 cd image-cropper
 pnpm install
-
-cd ../screen-capture
-pnpm install
 ```
+
+From there, follow the project-specific instructions below.
 
 ## Image Cropper Extension
 
@@ -64,12 +68,33 @@ The **Screen Capture** project injects an overlay into the active tab so you can
 
 ```bash
 cd screen-capture
+pnpm install
 pnpm typecheck     # static type analysis
 pnpm build         # emits dist/
 pnpm zip           # packages screen-capture.zip
 ```
 
 Chrome loads the compiled assets from `screen-capture/dist`.
+
+## Sales Lead Snapshot App
+
+The **Sales Lead Snapshot** project is a lightweight Next.js (App Router) application that processes uploaded screenshots with two OpenAI-powered agents:
+
+- **Agent A** extracts structured lead information (name, title, company, domain, etc.) from the image.
+- **Agent B** uses that context to draft a concise, personalized outreach email.
+
+The data is stored in SQLite via Prisma, and the UI exposes upload, review, and CSV export flows.
+
+**Development workflow**
+
+```bash
+cd sales-lead-snapshot
+pnpm install
+pnpm db:migrate     # create SQLite schema
+pnpm dev            # launch http://localhost:3000
+```
+
+Set `OPENAI_API_KEY` in `.env.local` to enable agent calls.
 
 ---
 
