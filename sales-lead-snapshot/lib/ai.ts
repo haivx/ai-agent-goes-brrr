@@ -160,6 +160,49 @@ export const extractLeadFromImage = async ({
   return extracted;
 };
 
+type LeadCanonicalFields = Pick<Lead, "name" | "title" | "company" | "domain">;
+
+const normalizeCanonicalField = (value: unknown) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+};
+
+const canonicalFields: Array<keyof LeadCanonicalFields> = [
+  "name",
+  "title",
+  "company",
+  "domain"
+];
+
+export const embedLeadCanonical = async (
+  leadFields: Partial<LeadCanonicalFields>
+): Promise<Float32Array> => {
+  const client = getClient();
+
+  const canonical = canonicalFields
+    .map((field) => normalizeCanonicalField(leadFields[field]))
+    .join("|");
+
+  const response = await client.embeddings.create({
+    model: "text-embedding-3-small",
+    input: canonical
+  });
+
+  const vector = response.data[0]?.embedding;
+
+  if (!vector) {
+    throw new Error("Failed to compute lead embedding");
+  }
+
+  return Float32Array.from(vector);
+};
+
 const formatLeadForPrompt = (lead: Lead) => {
   const fields: Array<
     [

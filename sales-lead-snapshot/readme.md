@@ -113,6 +113,12 @@ Click Copy email or Export CSV to download all leads.
 | `/api/leads/:id`  | `GET`  | Lead detail                           |
 | `/api/export.csv` | `GET`  | Export all leads as CSV               |
 
+### Optional Deduplication
+
+- Append `?dedupe=1` to the upload request URL **or** include a form field `dedupe=true` to enable duplicate detection.
+- The API computes embeddings for the lead's canonical string (`name|title|company|domain`) and compares against stored leads using cosine similarity.
+- If the highest similarity is >= 0.90, the API responds with `{ duplicateOf: <leadId> }` and skips creating a new record.
+
 
 ## 📁 File Structure
 
