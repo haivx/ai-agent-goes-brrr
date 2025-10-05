@@ -20,7 +20,17 @@ const ensureUploadDir = async (dir: string) => {
 };
 
 const isPng = (buffer: Buffer, mimeType: string | undefined) => {
-  if (mimeType !== "image/png") {
+  const normalizedMimeType = mimeType?.toLowerCase();
+  const hasValidMimeType =
+    !normalizedMimeType ||
+    normalizedMimeType === "image/png" ||
+    normalizedMimeType === "image/x-png";
+
+  if (!hasValidMimeType) {
+    return false;
+  }
+
+  if (buffer.length < PNG_SIGNATURE.length) {
     return false;
   }
 
