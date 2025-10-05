@@ -36,7 +36,7 @@ export const leadSelect = {
   location: true,
   notes: true,
   openerEmail: true
-} satisfies const;
+} as const satisfies Prisma.LeadSelect;
 
 type LeadRecord = Prisma.LeadGetPayload<{ select: typeof leadSelect }>;
 

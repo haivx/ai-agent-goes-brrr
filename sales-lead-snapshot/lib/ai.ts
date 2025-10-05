@@ -49,6 +49,8 @@ type ExtractLeadArgs = {
   absoluteFilePath: string;
 };
 
+type ResponseCreateParams = Parameters<OpenAI["responses"]["create"]>[0];
+
 let cachedClient: OpenAI | null = null;
 
 const getClient = () => {
@@ -91,7 +93,7 @@ export const extractLeadFromImage = async ({
         role: "system",
         content: [
           {
-            type: "text",
+            type: "input_text",
             text: SYSTEM_PROMPT
           }
         ]
@@ -117,7 +119,7 @@ export const extractLeadFromImage = async ({
         schema: leadSchema
       }
     }
-  });
+  } as ResponseCreateParams);
 
   const responseData = response as unknown as {
     output_text?: string;
@@ -223,7 +225,7 @@ export const generateOpenerEmail = async (
         role: "system",
         content: [
           {
-            type: "text",
+            type: "input_text",
             text: "You are Agent B, an expert SDR copywriter crafting personable outreach emails."
           }
         ]
@@ -232,13 +234,13 @@ export const generateOpenerEmail = async (
         role: "user",
         content: [
           {
-            type: "text",
+            type: "input_text",
             text: `${promptLines.join("\n")}\n\nLead Details:\n${formatLeadForPrompt(lead)}`
           }
         ]
       }
     ]
-  });
+  } as ResponseCreateParams);
 
   const responseData = response as unknown as {
     output_text?: string;
