@@ -158,4 +158,108 @@ export const extractLeadFromImage = async ({
   return extracted;
 };
 
+const formatLeadForPrompt = (lead: Lead) => {
+  const fields: Array<
+    [
+      keyof Pick<
+        Lead,
+        | "name"
+        | "title"
+        | "company"
+        | "notes"
+        | "location"
+        | "website"
+        | "domain"
+        | "sourceUrl"
+        | "imagePath"
+      >,
+      string
+    ]
+  > = [
+    ["name", "Name"],
+    ["title", "Title"],
+    ["company", "Company"],
+    ["notes", "Notes"],
+    ["location", "Location"],
+    ["website", "Website"],
+    ["domain", "Domain"],
+    ["sourceUrl", "Source URL"],
+    ["imagePath", "Image Path"]
+  ];
+
+  return fields
+    .map(([key, label]) => {
+      const value = lead[key];
+      if (typeof value === "string" && value.trim().length > 0) {
+        return `${label}: ${value.trim()}`;
+      }
+
+      return `${label}: (unknown)`;
+    })
+    .join("\n");
+};
+
+export const generateOpenerEmail = async (
+  lead: Lead,
+  productContext?: string
+): Promise<string> => {
+  const client = getClient();
+
+  const promptLines = [
+    "Write a short, friendly cold outreach email of around 90 words.",
+    "Use a helpful, conversational tone and end with a gentle question inviting a response.",
+    "Reference any relevant lead details that are available.",
+    productContext
+      ? `Keep in mind the following product or company context: ${productContext}`
+      : null,
+    "Do not add a subject line or greeting that sounds robotic.",
+    "Return only the email body."
+  ].filter(Boolean);
+
+  const response = await client.responses.create({
+    model: "gpt-4o-mini",
+    input: [
+      {
+        role: "system",
+        content: [
+          {
+            type: "text",
+            text: "You are Agent B, an expert SDR copywriter crafting personable outreach emails."
+          }
+        ]
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `${promptLines.join("\n")}\n\nLead Details:\n${formatLeadForPrompt(lead)}`
+          }
+        ]
+      }
+    ]
+  });
+
+  const responseData = response as unknown as {
+    output_text?: string;
+    output?: Array<{ content?: Array<{ text?: string }> }>;
+  };
+
+  const outputText =
+    responseData.output_text ??
+    responseData.output
+      ?.flatMap((item) => item.content ?? [])
+      .map((contentItem) => contentItem.text ?? "")
+      .join("") ??
+    "";
+
+  const email = outputText.trim();
+
+  if (!email) {
+    throw new Error("Failed to generate opener email");
+  }
+
+  return email;
+};
+
 export type { ExtractLeadArgs };
