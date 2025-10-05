@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import type { LeadDto } from "@/app/api/leads/route";
 
 type UploadState = {
   imagePath: string;
@@ -63,7 +64,7 @@ export default function HomePage() {
           throw new Error("Upload failed");
         }
 
-        const data: { imagePath: string } = await response.json();
+        const { data }: { data: LeadDto } = await response.json();
         setUploads((current) => [
           { imagePath: data.imagePath, createdAt: Date.now() },
           ...current
