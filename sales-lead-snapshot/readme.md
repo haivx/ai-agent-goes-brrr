@@ -4,9 +4,18 @@ Turn screenshots into structured **leads** and **ready-to-send outreach emails**
 
 ## 🚀 Goal
 
-Upload or drag & drop a **screenshot** (e.g., LinkedIn profile, company page, conference photo)  
-→ Agent A extracts lead info → Agent B writes a personalized outreach email  
+Upload or drag & drop a **screenshot** (e.g., LinkedIn profile, company page, conference photo)
+→ Agent A extracts lead info → Agent B writes a personalized outreach email
 → Saved to SQLite with optional dedupe.
+
+## 🛠️ Development
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Then open http://localhost:3000 to view the app.
 
 ---
 
