@@ -112,9 +112,9 @@ export const extractLeadFromImage = async ({
         ]
       }
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
+    text: {
+      format: {
+        type: "json_schema",
         name: "lead_extraction_result",
         schema: leadSchema
       }
