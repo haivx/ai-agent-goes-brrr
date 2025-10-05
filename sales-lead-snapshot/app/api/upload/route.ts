@@ -3,6 +3,12 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createId } from "@paralleldrive/cuid2";
 
+import { mapLeadToDto, leadSelect } from "@/app/api/leads/route";
+import { extractLeadFromImage } from "@/lib/ai";
+import prisma from "@/lib/prisma";
+
+import type { LeadDto } from "@/app/api/leads/route";
+
 export const runtime = "nodejs";
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -18,6 +24,8 @@ const isPng = (buffer: Buffer, mimeType: string | undefined) => {
 
   return PNG_SIGNATURE.equals(buffer.subarray(0, PNG_SIGNATURE.length));
 };
+
+type UploadResponse = { data: LeadDto };
 
 export async function POST(request: Request) {
   try {
@@ -48,7 +56,28 @@ export async function POST(request: Request) {
     const filePath = path.join(uploadDir, `${id}.png`);
     await fs.writeFile(filePath, buffer);
 
-    return NextResponse.json({ imagePath: `/uploads/${id}.png` });
+    const imagePath = `/uploads/${id}.png`;
+    const sourceUrlEntry = formData.get("sourceUrl");
+    const sourceUrl =
+      typeof sourceUrlEntry === "string" && sourceUrlEntry.trim().length > 0
+        ? sourceUrlEntry.trim()
+        : null;
+
+    const extracted = await extractLeadFromImage({
+      imagePath,
+      absoluteFilePath: filePath
+    });
+
+    const lead = await prisma.lead.create({
+      data: {
+        imagePath,
+        sourceUrl,
+        ...extracted
+      },
+      select: leadSelect
+    });
+
+    return NextResponse.json<UploadResponse>({ data: mapLeadToDto(lead) });
   } catch (error) {
     console.error("Upload failed", error);
     return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
