@@ -4,7 +4,7 @@ import path from "path";
 import { createId } from "@paralleldrive/cuid2";
 
 import { mapLeadToDto, leadSelect } from "@/app/api/leads/route";
-import { extractLeadFromImage } from "@/lib/ai";
+import { extractLeadFromImage, generateOpenerEmail } from "@/lib/ai";
 import prisma from "@/lib/prisma";
 
 import type { LeadDto } from "@/app/api/leads/route";
@@ -62,22 +62,34 @@ export async function POST(request: Request) {
       typeof sourceUrlEntry === "string" && sourceUrlEntry.trim().length > 0
         ? sourceUrlEntry.trim()
         : null;
+    const productContextEntry = formData.get("productContext");
+    const productContext =
+      typeof productContextEntry === "string" && productContextEntry.trim().length > 0
+        ? productContextEntry.trim()
+        : undefined;
 
     const extracted = await extractLeadFromImage({
       imagePath,
       absoluteFilePath: filePath
     });
 
-    const lead = await prisma.lead.create({
+    const createdLead = await prisma.lead.create({
       data: {
         imagePath,
         sourceUrl,
         ...extracted
-      },
+      }
+    });
+
+    const openerEmail = await generateOpenerEmail(createdLead, productContext);
+
+    const updatedLead = await prisma.lead.update({
+      where: { id: createdLead.id },
+      data: { openerEmail },
       select: leadSelect
     });
 
-    return NextResponse.json<UploadResponse>({ data: mapLeadToDto(lead) });
+    return NextResponse.json<UploadResponse>({ data: mapLeadToDto(updatedLead) });
   } catch (error) {
     console.error("Upload failed", error);
     return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
