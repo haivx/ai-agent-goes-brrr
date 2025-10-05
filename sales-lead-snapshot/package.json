@@ -13,6 +13,7 @@
     "db:migrate": "prisma migrate dev --name init"
   },
   "dependencies": {
+    "@paralleldrive/cuid2": "^2.2.2",
     "@prisma/client": "5.14.0",
     "@radix-ui/react-slot": "^1.0.4",
     "clsx": "^2.1.0",
