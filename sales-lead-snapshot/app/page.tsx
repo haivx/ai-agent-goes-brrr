@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { LeadDto, LeadResponse } from "@/app/api/leads/route";
 
 export default function HomePage() {
@@ -59,11 +60,16 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Leads</h1>
-        <p className="text-sm text-muted-foreground">
-          Browse the latest leads generated from your uploaded screenshots.
-        </p>
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">Leads</h1>
+          <p className="text-sm text-muted-foreground">
+            Browse the latest leads generated from your uploaded screenshots.
+          </p>
+        </div>
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/api/export.csv">Export CSV</Link>
+        </Button>
       </section>
 
       <section className="space-y-4">
