@@ -107,7 +107,7 @@ export const extractLeadFromImage = async ({
           },
           {
             type: "input_image",
-            image_base64: imageBase64
+            image_url: `data:image/png;base64,${imageBase64}`
           }
         ]
       }
