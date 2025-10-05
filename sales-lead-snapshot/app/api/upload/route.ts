@@ -7,6 +7,8 @@ import { mapLeadToDto, leadSelect } from "@/app/api/leads/route";
 import { extractLeadFromImage, generateOpenerEmail } from "@/lib/ai";
 import prisma from "@/lib/prisma";
 
+import type { Lead } from "@prisma/client";
+
 import type { LeadDto } from "@/app/api/leads/route";
 
 export const runtime = "nodejs";
@@ -68,10 +70,23 @@ export async function POST(request: Request) {
         ? productContextEntry.trim()
         : undefined;
 
-    const extracted = await extractLeadFromImage({
-      imagePath,
-      absoluteFilePath: filePath
-    });
+    const hasOpenAiKey =
+      typeof process.env.OPENAI_API_KEY === "string" && process.env.OPENAI_API_KEY.trim().length > 0;
+
+    let extracted: Partial<Lead> = {};
+
+    if (hasOpenAiKey) {
+      try {
+        extracted = await extractLeadFromImage({
+          imagePath,
+          absoluteFilePath: filePath
+        });
+      } catch (error) {
+        console.error("Lead extraction failed", error);
+      }
+    } else {
+      console.warn("Skipping lead extraction because OPENAI_API_KEY is not set");
+    }
 
     const createdLead = await prisma.lead.create({
       data: {
@@ -81,7 +96,15 @@ export async function POST(request: Request) {
       }
     });
 
-    const openerEmail = await generateOpenerEmail(createdLead, productContext);
+    let openerEmail: string | null = null;
+
+    if (hasOpenAiKey) {
+      try {
+        openerEmail = await generateOpenerEmail(createdLead, productContext);
+      } catch (error) {
+        console.error("Failed to generate opener email", error);
+      }
+    }
 
     const updatedLead = await prisma.lead.update({
       where: { id: createdLead.id },
