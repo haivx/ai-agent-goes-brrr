@@ -1,0 +1,21 @@
+{
+  "name": "@adapters/core",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "echo 'No dev script defined for @adapters/core'",
+    "lint": "echo 'No lint script defined for @adapters/core'",
+    "test": "echo 'No tests defined for @adapters/core'"
+  }
+}
