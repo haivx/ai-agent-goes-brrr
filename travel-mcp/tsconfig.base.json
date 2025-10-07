@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@domain/*": ["packages/domain/src/*"],
+      "@planner/*": ["packages/planner/src/*"],
+      "@adapters/*": ["packages/adapters/src/*"],
+      "@mcp-common/*": ["packages/mcp-common/src/*"]
+    }
+  }
+}
